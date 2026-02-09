@@ -3,7 +3,7 @@ name = "timer-sentinel"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "aaron",email = "aaron@aaron.es"}
+    {name = "aaron"}
 ]
 readme = "README.md"
 requires-python = ">=3.14"
@@ -16,3 +16,4 @@ packages = [{include = "timer_sentinel", from = "src"}]
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
