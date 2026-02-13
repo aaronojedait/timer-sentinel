@@ -13,7 +13,6 @@ permissions:
 
 jobs:
   test:
-    name: Test with Tox
     runs-on: ubuntu-latest
     strategy:
       matrix:
