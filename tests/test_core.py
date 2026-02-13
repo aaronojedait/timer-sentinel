@@ -1,3 +1,7 @@
+import time
+
+import pytest
+
 from timer_sentinel.core import TimerSentinel
 
 
@@ -24,3 +28,41 @@ class TestTimerSentinelBasics:
         timer = TimerSentinel(threshold=1.0, name="")
 
         assert timer.name == "TimerSentinel"
+
+
+class TestTimerSentinelManualUsage:
+    """Test manual start/end/report usage."""
+
+    def test_start_sets_timer(self):
+        """Test start() sets the internal timer."""
+        timer = TimerSentinel(threshold=1.0)
+        timer.start()
+
+        assert timer._timer is not None
+        assert isinstance(timer._timer, float)
+
+    def test_end_calculates_time(self):
+        """Test end() calculates total time correctly."""
+        timer = TimerSentinel(threshold=1.0)
+        timer.start()
+        time.sleep(0.1)
+        timer.end()
+
+        assert timer._total_time is not None
+        assert timer._total_time >= 0.1
+        assert timer._total_time < 0.5  # Allow some margin
+
+    def test_end_without_start_raises_error(self):
+        """Test end() raises RuntimeError if start() not called."""
+        timer = TimerSentinel(threshold=1.0)
+
+        with pytest.raises(RuntimeError, match="Timer not started"):
+            timer.end()
+
+    def test_report_without_end_raises_error(self):
+        """Test report() raises RuntimeError if end() not called."""
+        timer = TimerSentinel(threshold=1.0)
+        timer.start()
+
+        with pytest.raises(RuntimeError, match="Timer not ended"):
+            timer.report()
