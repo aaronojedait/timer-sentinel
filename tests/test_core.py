@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import time
 
@@ -281,3 +282,169 @@ class TestTimerSentinelEdgeCases:
         assert timer1._execution_id != timer2._execution_id
         assert len(timer1._execution_id) == 8
         assert len(timer2._execution_id) == 8
+
+
+class TestTimerSentinelAsyncDecorator:
+    """Test async decorator usage."""
+
+    @pytest.mark.asyncio
+    async def test_async_decorator_basic(self):
+        """Test basic async decorator usage."""
+
+        @TimerSentinel(threshold=1.0)
+        async def async_task():
+            await asyncio.sleep(0.1)
+            return "done"
+
+        result = await async_task()
+        assert result == "done"
+
+    @pytest.mark.asyncio
+    async def test_async_decorator_uses_function_name(self):
+        """Test async decorator uses function name when no name provided."""
+        timer_instance = TimerSentinel(threshold=1.0)
+
+        @timer_instance
+        async def my_async_function():
+            await asyncio.sleep(0.05)
+
+        await my_async_function()
+        assert timer_instance.name == "my_async_function"
+
+    @pytest.mark.asyncio
+    async def test_async_decorator_with_arguments(self):
+        """Test async decorator works with function arguments."""
+
+        @TimerSentinel(threshold=1.0)
+        async def async_add(a, b):
+            await asyncio.sleep(0.05)
+            return a + b
+
+        result = await async_add(2, 3)
+        assert result == 5
+
+    @pytest.mark.asyncio
+    async def test_async_decorator_preserves_metadata(self):
+        """Test async decorator preserves function name and docstring."""
+
+        @TimerSentinel(threshold=1.0)
+        async def documented_async_function():
+            """This is an async docstring."""
+            pass
+
+        assert documented_async_function.__name__ == "documented_async_function"
+        assert documented_async_function.__doc__ == "This is an async docstring."
+
+    @pytest.mark.asyncio
+    async def test_async_decorator_with_exception(self):
+        """Test async decorator propagates exceptions."""
+
+        @TimerSentinel(threshold=1.0, name="test")
+        async def failing_async_function():
+            await asyncio.sleep(0.05)
+            raise ValueError("Test async error")
+
+        with pytest.raises(ValueError, match="Test async error"):
+            await failing_async_function()
+
+    @pytest.mark.asyncio
+    async def test_async_decorator_logs_when_exceeds_threshold(self, caplog):
+        """Test async decorator logs when threshold exceeded."""
+        with caplog.at_level(logging.WARNING):
+
+            @TimerSentinel(threshold=0.05, name="slow_async")
+            async def slow_async_task():
+                await asyncio.sleep(0.1)
+
+            await slow_async_task()
+
+        assert len(caplog.records) == 1
+        assert "OVERTIME" in caplog.text
+        assert "slow_async" in caplog.text
+
+    @pytest.mark.asyncio
+    async def test_async_decorator_no_log_under_threshold(self, caplog):
+        """Test async decorator doesn't log when under threshold."""
+        with caplog.at_level(logging.WARNING):
+
+            @TimerSentinel(threshold=1.0, name="fast_async")
+            async def fast_async_task():
+                await asyncio.sleep(0.05)
+
+            await fast_async_task()
+
+        assert len(caplog.records) == 0
+
+    @pytest.mark.asyncio
+    async def test_async_decorator_callback_called(self):
+        """Test async decorator calls callback when threshold exceeded."""
+        callback_called = []
+
+        def callback():
+            callback_called.append(True)
+
+        @TimerSentinel(threshold=0.05, name="test_async", on_exceed_callback=callback)
+        async def slow_task():
+            await asyncio.sleep(0.1)
+
+        await slow_task()
+
+        assert len(callback_called) == 1
+
+    @pytest.mark.asyncio
+    async def test_async_decorator_callback_with_args(self):
+        """Test async decorator callback receives correct arguments."""
+        results = {}
+
+        def callback(name, value):
+            results["name"] = name
+            results["value"] = value
+
+        @TimerSentinel(
+            threshold=0.05,
+            name="test_async",
+            on_exceed_callback=callback,
+            callback_args={"name": "async_test", "value": 99},
+        )
+        async def slow_task():
+            await asyncio.sleep(0.1)
+
+        await slow_task()
+
+        assert results["name"] == "async_test"
+        assert results["value"] == 99
+
+    @pytest.mark.asyncio
+    async def test_multiple_async_calls_same_decorator(self):
+        """Test same async decorator can be called multiple times."""
+        call_count = []
+
+        @TimerSentinel(threshold=1.0, name="reusable_async")
+        async def reusable_task():
+            call_count.append(1)
+            await asyncio.sleep(0.05)
+            return len(call_count)
+
+        result1 = await reusable_task()
+        result2 = await reusable_task()
+        result3 = await reusable_task()
+
+        assert result1 == 1
+        assert result2 == 2
+        assert result3 == 3
+        assert len(call_count) == 3
+
+    @pytest.mark.asyncio
+    async def test_async_concurrent_execution(self):
+        """Test async decorator works with concurrent tasks."""
+
+        @TimerSentinel(threshold=1.0, name="concurrent")
+        async def concurrent_task(task_id):
+            await asyncio.sleep(0.1)
+            return task_id
+
+        # Run 5 tasks concurrently
+        tasks = [concurrent_task(i) for i in range(5)]
+        results = await asyncio.gather(*tasks)
+
+        assert results == [0, 1, 2, 3, 4]
