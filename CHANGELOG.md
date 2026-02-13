@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-02-13
+
+### Added
+- First stable release published to TestPyPI.
+- GitHub Actions workflow for running tests with Tox across multiple Python versions.
+- Automated build with Poetry and artifact upload.
+- Release-based publish pipeline using GitHub Releases.
+
 ## [0.1.0] - 2026-02-13
 
 ### Added
