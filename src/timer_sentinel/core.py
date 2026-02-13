@@ -1,4 +1,4 @@
-import asyncio
+import inspect
 import time
 from collections.abc import Callable
 from functools import wraps
@@ -114,7 +114,7 @@ class TimerSentinel:
                 await something()
         """
         # Check if function is async
-        if asyncio.iscoroutinefunction(func):
+        if inspect.iscoroutinefunction(func):
             return self._wrap_async(func)
         return self._wrap_sync(func)
 
