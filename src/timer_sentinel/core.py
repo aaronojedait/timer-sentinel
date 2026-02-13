@@ -1,3 +1,4 @@
+import asyncio
 import time
 from collections.abc import Callable
 from functools import wraps
@@ -12,16 +13,22 @@ class TimerSentinel:
     """Monitor execution time and log when threshold is exceeded.
 
     Can be used as a context manager, decorator, or called manually.
+    Supports both sync and async functions.
 
     Examples:
         # As context manager
         with TimerSentinel(threshold=1.0, name="task"):
             do_work()
 
-        # As decorator
+        # As decorator (sync)
         @TimerSentinel(threshold=1.0, name="task")
         def do_work():
             pass
+
+        # As decorator (async)
+        @TimerSentinel(threshold=1.0, name="task")
+        async def do_work():
+            await async_task()
 
         # Manual usage
         timer = TimerSentinel(threshold=1.0, name="task")
@@ -86,6 +93,8 @@ class TimerSentinel:
     def __call__(self, func: Callable) -> Callable:
         """Enable TimerSentinel to be used as a decorator.
 
+        Automatically detects async functions and wraps appropriately.
+
         Args:
             func: The function to wrap and time.
 
@@ -96,17 +105,44 @@ class TimerSentinel:
             @TimerSentinel(threshold=1.0)
             def my_function():
                 pass
+
+            @TimerSentinel(threshold=1.0)
+            async def my_async_function():
+                await something()
         """
+        # Check if function is async
+        if asyncio.iscoroutinefunction(func):
+            return self._wrap_async(func)
+        return self._wrap_sync(func)
+
+    def _wrap_sync(self, func: Callable) -> Callable:
+        """Wrap a synchronous function."""
 
         @wraps(func)
         def wrapper(*args, **kwargs):
-            # Set name once if not provided
-            if self.name is None:
+            if self.name:
                 self.name = func.__name__
 
             self.start()
             try:
                 return func(*args, **kwargs)
+            finally:
+                self.end()
+                self.report()
+
+        return wrapper
+
+    def _wrap_async(self, func: Callable) -> Callable:
+        """Wrap an asynchronous function."""
+
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            if not self.name:
+                self.name = func.__name__
+
+            self.start()
+            try:
+                return await func(*args, **kwargs)
             finally:
                 self.end()
                 self.report()
@@ -150,7 +186,7 @@ class TimerSentinel:
             RuntimeError: If start() was not called before end().
         """
         if self._timer is None:
-            raise RuntimeError("Timer not started. Call start() first.")
+            raise RuntimeError("Timer not started")
         self._total_time = time.perf_counter() - self._timer
 
     def report(self) -> None:
@@ -163,7 +199,7 @@ class TimerSentinel:
             RuntimeError: If end() was not called before report().
         """
         if self._total_time is None:
-            raise RuntimeError("Timer not ended. Call end() first.")
+            raise RuntimeError("Timer not ended")
 
         if self._total_time > self.threshold:
             msg = (
