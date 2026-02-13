@@ -51,15 +51,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install poetry
 
-      - name: Build package
-        run: |
-          poetry install --no-interaction --no-ansi
-          poetry build
-
       - name: Publish to TestPyPI
         env:
           POETRY_PYPI_TOKEN_TESTPYPI: ${{ secrets.TEST_PYPI_TOKEN }}
         run: |
           poetry config repositories.testpypi https://test.pypi.org/legacy/
-          poetry publish --repository testpypi --username __token__ --password "$POETRY_PYPI_TOKEN_TESTPYPI" --no-interaction --skip-existing
+          poetry publish --build --repository testpypi --username __token__ --password "$POETRY_PYPI_TOKEN_TESTPYPI" --no-interaction --skip-existing
 
