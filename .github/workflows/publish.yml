@@ -51,7 +51,7 @@ jobs:
           name: release-dists
           path: dist/
 
-  pypi-test-publish:
+  pypi-publish:
     runs-on: ubuntu-latest
     needs:
       - release-build
@@ -59,7 +59,7 @@ jobs:
       id-token: write
 
     environment:
-      name: testpypi
+      name: pypi
 
     steps:
       - name: Retrieve release distributions
@@ -68,7 +68,7 @@ jobs:
           name: release-dists
           path: dist/
 
-      - name: Publish release distributions to TestPyPI
+      - name: Publish release distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist/
