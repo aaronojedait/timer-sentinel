@@ -192,3 +192,59 @@ class TestTimerSentinelLogging:
 
         assert len(caplog.records) == 1
         assert caplog.records[0].levelno == logging.ERROR
+
+
+class TestTimerSentinelCallback:
+    """Test callback functionality."""
+
+    def test_callback_not_called_under_threshold(self):
+        """Test callback is not called when under threshold."""
+        callback_called = []
+
+        def callback():
+            callback_called.append(True)
+
+        timer = TimerSentinel(threshold=1.0, name="test", on_exceed_callback=callback)
+        timer.start()
+        time.sleep(0.1)
+        timer.end()
+        timer.report()
+
+        assert len(callback_called) == 0
+
+    def test_callback_called_when_exceeds_threshold(self):
+        """Test callback is called when threshold exceeded."""
+        callback_called = []
+
+        def callback():
+            callback_called.append(True)
+
+        timer = TimerSentinel(threshold=0.05, name="test", on_exceed_callback=callback)
+        timer.start()
+        time.sleep(0.1)
+        timer.end()
+        timer.report()
+
+        assert len(callback_called) == 1
+
+    def test_callback_with_arguments(self):
+        """Test callback receives correct arguments."""
+        results = {}
+
+        def callback(name, value):
+            results["name"] = name
+            results["value"] = value
+
+        timer = TimerSentinel(
+            threshold=0.05,
+            name="test",
+            on_exceed_callback=callback,
+            callback_args={"name": "test_name", "value": 42},
+        )
+        timer.start()
+        time.sleep(0.1)
+        timer.end()
+        timer.report()
+
+        assert results["name"] == "test_name"
+        assert results["value"] == 42
