@@ -248,3 +248,36 @@ class TestTimerSentinelCallback:
 
         assert results["name"] == "test_name"
         assert results["value"] == 42
+
+
+class TestTimerSentinelEdgeCases:
+    """Test edge cases and special scenarios."""
+
+    def test_multiple_executions_same_instance(self):
+        """Test same instance can be reused for multiple timings."""
+        timer = TimerSentinel(threshold=0.05, name="reusable")
+
+        # First execution
+        timer.start()
+        time.sleep(0.1)
+        timer.end()
+        first_time = timer._total_time
+
+        # Second execution
+        timer.start()
+        time.sleep(0.1)
+        timer.end()
+        second_time = timer._total_time
+
+        assert first_time is not None
+        assert second_time is not None
+        assert first_time != second_time
+
+    def test_execution_id_is_unique(self):
+        """Test each instance has unique execution ID."""
+        timer1 = TimerSentinel(threshold=1.0)
+        timer2 = TimerSentinel(threshold=1.0)
+
+        assert timer1._execution_id != timer2._execution_id
+        assert len(timer1._execution_id) == 8
+        assert len(timer2._execution_id) == 8
