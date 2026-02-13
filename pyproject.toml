@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "timer-sentinel"
-version = "0.1.0"
+version = "1.0.0"
 description = "A simple, efficient timer for monitoring execution time and logging threshold violations"
 readme = "README.md"
 license = "MIT"
