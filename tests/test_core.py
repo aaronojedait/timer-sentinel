@@ -1,3 +1,4 @@
+import logging
 import time
 
 import pytest
@@ -138,3 +139,56 @@ class TestTimerSentinelDecorator:
 
         assert documented_function.__name__ == "documented_function"
         assert documented_function.__doc__ == "This is a docstring."
+
+
+class TestTimerSentinelLogging:
+    """Test logging functionality."""
+
+    def test_no_log_when_under_threshold(self, caplog):
+        """Test no log when execution is under threshold."""
+        with caplog.at_level(logging.WARNING):
+            timer = TimerSentinel(threshold=1.0, name="test")
+            timer.start()
+            time.sleep(0.1)
+            timer.end()
+            timer.report()
+
+        assert len(caplog.records) == 0
+
+    def test_log_when_exceeds_threshold(self, caplog):
+        """Test logs when execution exceeds threshold."""
+        with caplog.at_level(logging.WARNING):
+            timer = TimerSentinel(threshold=0.05, name="test")
+            timer.start()
+            time.sleep(0.1)
+            timer.end()
+            timer.report()
+
+        assert len(caplog.records) == 1
+        assert "OVERTIME" in caplog.text
+        assert "test" in caplog.text
+
+    def test_custom_log_keyword(self, caplog):
+        """Test custom logging keyword is used."""
+        with caplog.at_level(logging.WARNING):
+            timer = TimerSentinel(threshold=0.05, name="test", on_exceed_keyword="SLOW")
+            timer.start()
+            time.sleep(0.1)
+            timer.end()
+            timer.report()
+
+        assert "SLOW" in caplog.text
+
+    def test_custom_log_level(self, caplog):
+        """Test custom logging level is used."""
+        with caplog.at_level(logging.ERROR):
+            timer = TimerSentinel(
+                threshold=0.05, name="test", on_exceed_level=logging.ERROR
+            )
+            timer.start()
+            time.sleep(0.1)
+            timer.end()
+            timer.report()
+
+        assert len(caplog.records) == 1
+        assert caplog.records[0].levelno == logging.ERROR
