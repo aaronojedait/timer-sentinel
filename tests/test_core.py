@@ -91,3 +91,50 @@ class TestTimerSentinelContextManager:
 
         # Timer should still be stopped even with exception
         assert timer._total_time is not None
+
+
+class TestTimerSentinelDecorator:
+    """Test decorator usage."""
+
+    def test_decorator_basic(self):
+        """Test basic decorator usage."""
+
+        @TimerSentinel(threshold=1.0)
+        def slow_function():
+            time.sleep(0.1)
+            return "done"
+
+        result = slow_function()
+        assert result == "done"
+
+    def test_decorator_uses_function_name(self):
+        """Test decorator uses function name when no name provided."""
+        timer_instance = TimerSentinel(threshold=1.0)
+
+        @timer_instance
+        def my_function():
+            pass
+
+        my_function()
+        assert timer_instance.name == "my_function"
+
+    def test_decorator_with_arguments(self):
+        """Test decorator works with function arguments."""
+
+        @TimerSentinel(threshold=1.0)
+        def add(a, b):
+            return a + b
+
+        result = add(2, 3)
+        assert result == 5
+
+    def test_decorator_preserves_function_metadata(self):
+        """Test decorator preserves function name and docstring."""
+
+        @TimerSentinel(threshold=1.0)
+        def documented_function():
+            """This is a docstring."""
+            pass
+
+        assert documented_function.__name__ == "documented_function"
+        assert documented_function.__doc__ == "This is a docstring."
