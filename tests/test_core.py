@@ -66,3 +66,28 @@ class TestTimerSentinelManualUsage:
 
         with pytest.raises(RuntimeError, match="Timer not ended"):
             timer.report()
+
+
+class TestTimerSentinelContextManager:
+    """Test context manager usage."""
+
+    def test_context_manager_basic(self):
+        """Test basic context manager usage."""
+        with TimerSentinel(threshold=1.0, name="test") as timer:
+            time.sleep(0.1)
+            assert timer._timer is not None
+
+        # After context, timer should be stopped
+        assert timer._total_time is not None
+        assert timer._total_time >= 0.1
+
+    def test_context_manager_with_exception(self):
+        """Test context manager propagates exceptions."""
+        timer = TimerSentinel(threshold=1.0, name="test")
+
+        with pytest.raises(ValueError):
+            with timer:
+                raise ValueError("Test error")
+
+        # Timer should still be stopped even with exception
+        assert timer._total_time is not None
