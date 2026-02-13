@@ -6,6 +6,7 @@ from logging import WARNING, Logger, getLogger
 from typing import Any, Self
 from uuid import uuid4
 
+DEFAULT_TIMER_NAME = "TimerSentinel"
 default_logger = getLogger("TimerSentinel")
 
 
@@ -49,12 +50,13 @@ class TimerSentinel:
         "_execution_id",
         "_timer",
         "_total_time",
+        "_use_func_name",
     )
 
     def __init__(
         self,
         threshold: float,
-        name: str = "",
+        name: str | None = None,
         logger: Logger | None = None,
         on_exceed_keyword: str = "OVERTIME",
         on_exceed_level: int = WARNING,
@@ -80,7 +82,8 @@ class TimerSentinel:
                 callback function when invoked.
         """
         self.threshold = threshold
-        self.name = name if name else "TimerSentinel"
+        self._use_func_name = not name
+        self.name = name or DEFAULT_TIMER_NAME
         self._logger = logger or default_logger
         self._on_exceed_keyword = on_exceed_keyword
         self._on_exceed_level = on_exceed_level
@@ -120,7 +123,7 @@ class TimerSentinel:
 
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if self.name:
+            if self._use_func_name:
                 self.name = func.__name__
 
             self.start()
@@ -137,7 +140,7 @@ class TimerSentinel:
 
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            if not self.name:
+            if self._use_func_name:
                 self.name = func.__name__
 
             self.start()
