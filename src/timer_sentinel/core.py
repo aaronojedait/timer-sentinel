@@ -3,7 +3,7 @@ import time
 from collections.abc import Callable
 from functools import wraps
 from logging import WARNING, Logger, getLogger
-from typing import Any, Self
+from typing import Any
 from uuid import uuid4
 
 DEFAULT_TIMER_NAME = "TimerSentinel"
@@ -152,7 +152,7 @@ class TimerSentinel:
 
         return wrapper
 
-    def __enter__(self) -> Self:
+    def __enter__(self) -> "TimerSentinel":
         """Enter the context manager and start timing.
 
         Returns:
