@@ -7,25 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.2] - 2026-02-14
 
-### Changed
-- Updated versioning scheme to follow PEP 440 recommendations for development releases.
-- Improved CI workflows for clearer separation between PyPI and TestPyPI publishing.
-- Enhanced logging format for better readability and consistency.
-- Minor code and documentation cleanups for maintainability.
-
-
-## [1.0.1] - 2026-02-13
-
-### Changed
-- Minor release automation refinements and CI workflow improvements.
-
-## [1.0.0] - 2026-02-13
-
 ### Added
-- First stable release published to TestPyPI.
-- GitHub Actions workflow for running tests with Tox across multiple Python versions.
-- Automated build with Poetry and artifact upload.
-- Release-based publish pipeline using GitHub Releases.
+- Makefile for easy setup, installation, linting, testing, and pre-commit tasks.
+- Automatic linting with ruff in GitHub Actions workflows.
+- Separate workflows for publishing to PyPI and TestPyPI.
+- Import test for TimerSentinel and shortcut import in `__init__.py`.
+- First develop release published to TestPyPI.
+- Added ruff linter command to use `ruff check` in CICD.
+
+### Changed
+- Improved tag patterns in workflows to better distinguish releases and pre-releases.
+- Updated logging setup in TimerSentinel for clarity and consistency.
+
+### Fixed
+- Removed trailing newlines in configuration and test files for consistency.
+- Added conditional checks for release-build and pypi-publish jobs for more robust CI.
 
 ## [0.1.0] - 2026-02-13
 
