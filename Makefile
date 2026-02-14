@@ -9,7 +9,7 @@ install:
 	poetry install
 
 lint:
-	ruff src/ tests/ --fix
+	ruff check src/ tests/ --fix
 
 test:
 	pytest
