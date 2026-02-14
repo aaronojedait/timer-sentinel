@@ -9,8 +9,20 @@ permissions:
   contents: read
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install ruff
+        run: pip install ruff
+      - name: Run ruff linter
+        run: ruff src/ tests/
   test:
     runs-on: ubuntu-latest
+    needs: lint
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
@@ -63,8 +75,8 @@ jobs:
     environment:
       name: pypi
 
-    # Only publish to PyPI for non-dev tags built from main, e.g. v1.2.3
-    if: "!contains(github.ref_name, 'dev')"
+  # Only publish to PyPI for non-dev tags built from main, e.g. v1.2.3
+  if: "!contains(github.ref_name, 'dev')"
 
     steps:
       - name: Retrieve release distributions
