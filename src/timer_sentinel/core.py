@@ -1,13 +1,18 @@
 import inspect
+import logging
 import time
 from collections.abc import Callable
 from functools import wraps
-from logging import WARNING, Logger, getLogger
 from typing import Any
 from uuid import uuid4
 
 DEFAULT_TIMER_NAME = "TimerSentinel"
-default_logger = getLogger("TimerSentinel")
+default_logger = logging.getLogger("TimerSentinel")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
 
 class TimerSentinel:
@@ -57,9 +62,9 @@ class TimerSentinel:
         self,
         threshold: float,
         name: str | None = None,
-        logger: Logger | None = None,
+        logger: logging.Logger | None = None,
         on_exceed_keyword: str = "OVERTIME",
-        on_exceed_level: int = WARNING,
+        on_exceed_level: int = logging.WARNING,
         on_exceed_callback: Callable[[], None] | None = None,
         callback_args: dict[str, Any] | None = None,
     ) -> None:
