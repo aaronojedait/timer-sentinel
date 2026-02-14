@@ -211,8 +211,11 @@ class TimerSentinel:
 
         if self._total_time > self.threshold:
             msg = (
-                f"{self._on_exceed_keyword} | {self.name}.{self._execution_id}"
-                f" | {self._total_time:.4f}s > {self.threshold:.4f}s"
+                f"{self._on_exceed_keyword} | "
+                f"name={self.name} | "
+                f"id={self._execution_id} | "
+                f"elapsed={self._total_time:.4f}s | "
+                f"threshold={self.threshold:.4f}s"
             )
             self._logger.log(self._on_exceed_level, msg)
 
