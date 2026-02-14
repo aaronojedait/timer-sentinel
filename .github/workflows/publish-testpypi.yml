@@ -21,6 +21,7 @@ jobs:
       - name: Run ruff linter
         run: ruff check src/ tests/
   test:
+    needs: lint
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -42,9 +43,7 @@ jobs:
 
   release-build:
     runs-on: ubuntu-latest
-    needs:
-      - test
-      - lint
+    needs: test
 
     steps:
       - uses: actions/checkout@v4
