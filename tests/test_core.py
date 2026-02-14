@@ -3,6 +3,7 @@ import logging
 import time
 
 import pytest
+
 from timer_sentinel.core import TimerSentinel
 
 
