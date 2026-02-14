@@ -75,9 +75,6 @@ jobs:
     environment:
       name: pypi
 
-  # Only publish to PyPI for non-dev tags built from main, e.g. v1.2.3
-  if: "!contains(github.ref_name, 'dev')"
-
     steps:
       - name: Retrieve release distributions
         uses: actions/download-artifact@v4
@@ -89,7 +86,6 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist/
-          skip-existing: true
 
   attach-assets:
     runs-on: ubuntu-latest
@@ -109,4 +105,3 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: dist/*
-

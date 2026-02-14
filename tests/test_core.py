@@ -3,7 +3,6 @@ import logging
 import time
 
 import pytest
-
 from timer_sentinel.core import TimerSentinel
 
 
@@ -97,9 +96,8 @@ class TestTimerSentinelContextManager:
         """Test context manager propagates exceptions."""
         timer = TimerSentinel(threshold=1.0, name="test")
 
-        with pytest.raises(ValueError):
-            with timer:
-                raise ValueError("Test error")
+        with pytest.raises(ValueError), timer:
+            raise ValueError("Test error")
 
         # Timer should still be stopped even with exception
         assert timer._total_time is not None

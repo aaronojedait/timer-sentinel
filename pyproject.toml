@@ -50,4 +50,3 @@ source = ["src"]
 
 [tool.coverage.report]
 exclude_lines = ["pragma: no cover"]
-
