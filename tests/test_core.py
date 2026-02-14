@@ -7,6 +7,16 @@ import pytest
 from timer_sentinel.core import TimerSentinel
 
 
+class TestTimerSentinelImports:
+    """Test all the imports"""
+
+    def test_short_import(self) -> None:
+        """Test if the shorcuts are working fine"""
+        from timer_sentinel import TimerSentinel
+
+        assert TimerSentinel.__name__ == "TimerSentinel"
+
+
 class TestTimerSentinelBasics:
     """Test basic functionality"""
 
