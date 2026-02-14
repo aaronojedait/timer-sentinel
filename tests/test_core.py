@@ -7,6 +7,16 @@ import pytest
 from timer_sentinel.core import TimerSentinel
 
 
+class TestTimerSentinelImports:
+    """Test all the imports"""
+
+    def test_short_import(self) -> None:
+        """Test if the shorcuts are working fine"""
+        from timer_sentinel import TimerSentinel
+
+        assert TimerSentinel.__name__ == "TimerSentinel"
+
+
 class TestTimerSentinelBasics:
     """Test basic functionality"""
 
@@ -87,9 +97,8 @@ class TestTimerSentinelContextManager:
         """Test context manager propagates exceptions."""
         timer = TimerSentinel(threshold=1.0, name="test")
 
-        with pytest.raises(ValueError):
-            with timer:
-                raise ValueError("Test error")
+        with pytest.raises(ValueError), timer:
+            raise ValueError("Test error")
 
         # Timer should still be stopped even with exception
         assert timer._total_time is not None

@@ -1,13 +1,18 @@
 import inspect
+import logging
 import time
 from collections.abc import Callable
 from functools import wraps
-from logging import WARNING, Logger, getLogger
 from typing import Any
 from uuid import uuid4
 
 DEFAULT_TIMER_NAME = "TimerSentinel"
-default_logger = getLogger("TimerSentinel")
+default_logger = logging.getLogger("TimerSentinel")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
 
 class TimerSentinel:
@@ -57,9 +62,9 @@ class TimerSentinel:
         self,
         threshold: float,
         name: str | None = None,
-        logger: Logger | None = None,
+        logger: logging.Logger | None = None,
         on_exceed_keyword: str = "OVERTIME",
-        on_exceed_level: int = WARNING,
+        on_exceed_level: int = logging.WARNING,
         on_exceed_callback: Callable[[], None] | None = None,
         callback_args: dict[str, Any] | None = None,
     ) -> None:
@@ -206,8 +211,11 @@ class TimerSentinel:
 
         if self._total_time > self.threshold:
             msg = (
-                f"{self._on_exceed_keyword} | {self.name}.{self._execution_id}"
-                f" | {self._total_time:.4f}s > {self.threshold:.4f}s"
+                f"{self._on_exceed_keyword} | "
+                f"name={self.name} | "
+                f"id={self._execution_id} | "
+                f"elapsed={self._total_time:.4f}s | "
+                f"threshold={self.threshold:.4f}s"
             )
             self._logger.log(self._on_exceed_level, msg)
 
