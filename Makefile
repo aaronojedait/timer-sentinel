@@ -8,6 +8,9 @@ setup:
 install:
 	poetry install
 
+type-check:
+	poetry run mypy ./src ./tests --strict
+
 lint:
 	ruff check src/ tests/ --fix
 
