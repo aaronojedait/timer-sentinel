@@ -65,7 +65,7 @@ class TimerSentinel:
         logger: logging.Logger | None = None,
         on_exceed_keyword: str = "OVERTIME",
         on_exceed_level: int = logging.WARNING,
-        on_exceed_callback: Callable[[], None] | None = None,
+        on_exceed_callback: Callable[..., Any] | None = None,
         callback_args: dict[str, Any] | None = None,
     ) -> None:
         """Initialize the timer sentinel.
@@ -94,11 +94,11 @@ class TimerSentinel:
         self._on_exceed_level = on_exceed_level
         self._on_exceed_callback = on_exceed_callback
         self._callback_args = callback_args or {}
-        self._execution_id = uuid4().hex[:8]
-        self._timer = None
-        self._total_time = None
+        self._execution_id: str = uuid4().hex[:8]
+        self._timer: float | None = None
+        self._total_time: float | None = None
 
-    def __call__(self, func: Callable) -> Callable:
+    def __call__(self, func: Callable[..., Any]) -> Callable[..., Any]:
         """Enable TimerSentinel to be used as a decorator.
 
         Automatically detects async functions and wraps appropriately.
@@ -123,11 +123,11 @@ class TimerSentinel:
             return self._wrap_async(func)
         return self._wrap_sync(func)
 
-    def _wrap_sync(self, func: Callable) -> Callable:
+    def _wrap_sync(self, func: Callable[..., Any]) -> Callable[..., Any]:
         """Wrap a synchronous function."""
 
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: tuple[Any, ...], **kwargs: dict[str, Any]) -> Any:
             if self._use_func_name:
                 self.name = func.__name__
 
@@ -140,11 +140,11 @@ class TimerSentinel:
 
         return wrapper
 
-    def _wrap_async(self, func: Callable) -> Callable:
+    def _wrap_async(self, func: Callable[..., Any]) -> Callable[..., Any]:
         """Wrap an asynchronous function."""
 
         @wraps(func)
-        async def wrapper(*args, **kwargs):
+        async def wrapper(*args: tuple[Any, ...], **kwargs: dict[str, Any]) -> Any:
             if self._use_func_name:
                 self.name = func.__name__
 
@@ -166,7 +166,9 @@ class TimerSentinel:
         self.start()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(
+        self, exc_type: type[Any] | None, exc_val: BaseException | None, exc_tb: Any
+    ) -> None:
         """Exit the context manager, stop timing and report.
 
         Args:

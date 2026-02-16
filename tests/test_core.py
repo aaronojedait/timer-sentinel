@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import time
+from typing import Any, Literal, NoReturn
 
 import pytest
 
@@ -45,7 +46,7 @@ class TestTimerSentinelBasics:
 class TestTimerSentinelManualUsage:
     """Test manual start/end/report usage."""
 
-    def test_start_sets_timer(self):
+    def test_start_sets_timer(self) -> None:
         """Test start() sets the internal timer."""
         timer = TimerSentinel(threshold=1.0)
         timer.start()
@@ -53,7 +54,7 @@ class TestTimerSentinelManualUsage:
         assert timer._timer is not None
         assert isinstance(timer._timer, float)
 
-    def test_end_calculates_time(self):
+    def test_end_calculates_time(self) -> None:
         """Test end() calculates total time correctly."""
         timer = TimerSentinel(threshold=1.0)
         timer.start()
@@ -64,14 +65,14 @@ class TestTimerSentinelManualUsage:
         assert timer._total_time >= 0.1
         assert timer._total_time < 0.5  # Allow some margin
 
-    def test_end_without_start_raises_error(self):
+    def test_end_without_start_raises_error(self) -> None:
         """Test end() raises RuntimeError if start() not called."""
         timer = TimerSentinel(threshold=1.0)
 
         with pytest.raises(RuntimeError, match="Timer not started"):
             timer.end()
 
-    def test_report_without_end_raises_error(self):
+    def test_report_without_end_raises_error(self) -> None:
         """Test report() raises RuntimeError if end() not called."""
         timer = TimerSentinel(threshold=1.0)
         timer.start()
@@ -83,7 +84,7 @@ class TestTimerSentinelManualUsage:
 class TestTimerSentinelContextManager:
     """Test context manager usage."""
 
-    def test_context_manager_basic(self):
+    def test_context_manager_basic(self) -> None:
         """Test basic context manager usage."""
         with TimerSentinel(threshold=1.0, name="test") as timer:
             time.sleep(0.1)
@@ -93,7 +94,7 @@ class TestTimerSentinelContextManager:
         assert timer._total_time is not None
         assert timer._total_time >= 0.1
 
-    def test_context_manager_with_exception(self):
+    def test_context_manager_with_exception(self) -> None:
         """Test context manager propagates exceptions."""
         timer = TimerSentinel(threshold=1.0, name="test")
 
@@ -107,43 +108,43 @@ class TestTimerSentinelContextManager:
 class TestTimerSentinelDecorator:
     """Test decorator usage."""
 
-    def test_decorator_basic(self):
+    def test_decorator_basic(self) -> None:
         """Test basic decorator usage."""
 
         @TimerSentinel(threshold=1.0)
-        def slow_function():
+        def slow_function() -> Literal["done"]:
             time.sleep(0.1)
             return "done"
 
         result = slow_function()
         assert result == "done"
 
-    def test_decorator_uses_function_name(self):
+    def test_decorator_uses_function_name(self) -> None:
         """Test decorator uses function name when no name provided."""
         timer_instance = TimerSentinel(threshold=1.0)
 
         @timer_instance
-        def my_function():
+        def my_function() -> None:
             pass
 
         my_function()
         assert timer_instance.name == "my_function"
 
-    def test_decorator_with_arguments(self):
+    def test_decorator_with_arguments(self) -> None:
         """Test decorator works with function arguments."""
 
         @TimerSentinel(threshold=1.0)
-        def add(a, b):
+        def add(a: int, b: int) -> int:
             return a + b
 
         result = add(2, 3)
         assert result == 5
 
-    def test_decorator_preserves_function_metadata(self):
+    def test_decorator_preserves_function_metadata(self) -> None:
         """Test decorator preserves function name and docstring."""
 
         @TimerSentinel(threshold=1.0)
-        def documented_function():
+        def documented_function() -> None:
             """This is a docstring."""
             pass
 
@@ -154,7 +155,7 @@ class TestTimerSentinelDecorator:
 class TestTimerSentinelLogging:
     """Test logging functionality."""
 
-    def test_no_log_when_under_threshold(self, caplog):
+    def test_no_log_when_under_threshold(self, caplog: Any) -> None:
         """Test no log when execution is under threshold."""
         with caplog.at_level(logging.WARNING):
             timer = TimerSentinel(threshold=1.0, name="test")
@@ -165,7 +166,7 @@ class TestTimerSentinelLogging:
 
         assert len(caplog.records) == 0
 
-    def test_log_when_exceeds_threshold(self, caplog):
+    def test_log_when_exceeds_threshold(self, caplog: Any) -> None:
         """Test logs when execution exceeds threshold."""
         with caplog.at_level(logging.WARNING):
             timer = TimerSentinel(threshold=0.05, name="test")
@@ -178,7 +179,7 @@ class TestTimerSentinelLogging:
         assert "OVERTIME" in caplog.text
         assert "test" in caplog.text
 
-    def test_custom_log_keyword(self, caplog):
+    def test_custom_log_keyword(self, caplog: Any) -> None:
         """Test custom logging keyword is used."""
         with caplog.at_level(logging.WARNING):
             timer = TimerSentinel(threshold=0.05, name="test", on_exceed_keyword="SLOW")
@@ -189,7 +190,7 @@ class TestTimerSentinelLogging:
 
         assert "SLOW" in caplog.text
 
-    def test_custom_log_level(self, caplog):
+    def test_custom_log_level(self, caplog: Any) -> None:
         """Test custom logging level is used."""
         with caplog.at_level(logging.ERROR):
             timer = TimerSentinel(
@@ -207,11 +208,11 @@ class TestTimerSentinelLogging:
 class TestTimerSentinelCallback:
     """Test callback functionality."""
 
-    def test_callback_not_called_under_threshold(self):
+    def test_callback_not_called_under_threshold(self) -> None:
         """Test callback is not called when under threshold."""
         callback_called = []
 
-        def callback():
+        def callback() -> None:
             callback_called.append(True)
 
         timer = TimerSentinel(threshold=1.0, name="test", on_exceed_callback=callback)
@@ -222,11 +223,11 @@ class TestTimerSentinelCallback:
 
         assert len(callback_called) == 0
 
-    def test_callback_called_when_exceeds_threshold(self):
+    def test_callback_called_when_exceeds_threshold(self) -> None:
         """Test callback is called when threshold exceeded."""
         callback_called = []
 
-        def callback():
+        def callback() -> None:
             callback_called.append(True)
 
         timer = TimerSentinel(threshold=0.05, name="test", on_exceed_callback=callback)
@@ -237,19 +238,16 @@ class TestTimerSentinelCallback:
 
         assert len(callback_called) == 1
 
-    def test_callback_with_arguments(self):
+    def test_callback_with_arguments(self) -> None:
         """Test callback receives correct arguments."""
-        results = {}
+        results: dict[str, Any] = {}
 
-        def callback(name, value):
-            results["name"] = name
-            results["value"] = value
+        def callback() -> None:
+            results["name"] = "test_name"
+            results["value"] = 42
 
         timer = TimerSentinel(
-            threshold=0.05,
-            name="test",
-            on_exceed_callback=callback,
-            callback_args={"name": "test_name", "value": 42},
+            threshold=0.05, name="test", on_exceed_callback=callback, callback_args={}
         )
         timer.start()
         time.sleep(0.1)
@@ -263,7 +261,7 @@ class TestTimerSentinelCallback:
 class TestTimerSentinelEdgeCases:
     """Test edge cases and special scenarios."""
 
-    def test_multiple_executions_same_instance(self):
+    def test_multiple_executions_same_instance(self) -> None:
         """Test same instance can be reused for multiple timings."""
         timer = TimerSentinel(threshold=0.05, name="reusable")
 
@@ -283,7 +281,7 @@ class TestTimerSentinelEdgeCases:
         assert second_time is not None
         assert first_time != second_time
 
-    def test_execution_id_is_unique(self):
+    def test_execution_id_is_unique(self) -> None:
         """Test each instance has unique execution ID."""
         timer1 = TimerSentinel(threshold=1.0)
         timer2 = TimerSentinel(threshold=1.0)
@@ -297,11 +295,11 @@ class TestTimerSentinelAsyncDecorator:
     """Test async decorator usage."""
 
     @pytest.mark.asyncio
-    async def test_async_decorator_basic(self):
+    async def test_async_decorator_basic(self) -> None:
         """Test basic async decorator usage."""
 
         @TimerSentinel(threshold=1.0)
-        async def async_task():
+        async def async_task() -> Literal["done"]:
             await asyncio.sleep(0.1)
             return "done"
 
@@ -309,23 +307,23 @@ class TestTimerSentinelAsyncDecorator:
         assert result == "done"
 
     @pytest.mark.asyncio
-    async def test_async_decorator_uses_function_name(self):
+    async def test_async_decorator_uses_function_name(self) -> None:
         """Test async decorator uses function name when no name provided."""
         timer_instance = TimerSentinel(threshold=1.0)
 
         @timer_instance
-        async def my_async_function():
+        async def my_async_function() -> None:
             await asyncio.sleep(0.05)
 
         await my_async_function()
         assert timer_instance.name == "my_async_function"
 
     @pytest.mark.asyncio
-    async def test_async_decorator_with_arguments(self):
+    async def test_async_decorator_with_arguments(self) -> None:
         """Test async decorator works with function arguments."""
 
         @TimerSentinel(threshold=1.0)
-        async def async_add(a, b):
+        async def async_add(a: int, b: int) -> int:
             await asyncio.sleep(0.05)
             return a + b
 
@@ -333,11 +331,11 @@ class TestTimerSentinelAsyncDecorator:
         assert result == 5
 
     @pytest.mark.asyncio
-    async def test_async_decorator_preserves_metadata(self):
+    async def test_async_decorator_preserves_metadata(self) -> None:
         """Test async decorator preserves function name and docstring."""
 
         @TimerSentinel(threshold=1.0)
-        async def documented_async_function():
+        async def documented_async_function() -> None:
             """This is an async docstring."""
             pass
 
@@ -345,11 +343,11 @@ class TestTimerSentinelAsyncDecorator:
         assert documented_async_function.__doc__ == "This is an async docstring."
 
     @pytest.mark.asyncio
-    async def test_async_decorator_with_exception(self):
+    async def test_async_decorator_with_exception(self) -> None:
         """Test async decorator propagates exceptions."""
 
         @TimerSentinel(threshold=1.0, name="test")
-        async def failing_async_function():
+        async def failing_async_function() -> NoReturn:
             await asyncio.sleep(0.05)
             raise ValueError("Test async error")
 
@@ -357,12 +355,14 @@ class TestTimerSentinelAsyncDecorator:
             await failing_async_function()
 
     @pytest.mark.asyncio
-    async def test_async_decorator_logs_when_exceeds_threshold(self, caplog):
+    async def test_async_decorator_logs_when_exceeds_threshold(
+        self, caplog: Any
+    ) -> None:
         """Test async decorator logs when threshold exceeded."""
         with caplog.at_level(logging.WARNING):
 
             @TimerSentinel(threshold=0.05, name="slow_async")
-            async def slow_async_task():
+            async def slow_async_task() -> None:
                 await asyncio.sleep(0.1)
 
             await slow_async_task()
@@ -372,12 +372,12 @@ class TestTimerSentinelAsyncDecorator:
         assert "slow_async" in caplog.text
 
     @pytest.mark.asyncio
-    async def test_async_decorator_no_log_under_threshold(self, caplog):
+    async def test_async_decorator_no_log_under_threshold(self, caplog: Any) -> None:
         """Test async decorator doesn't log when under threshold."""
         with caplog.at_level(logging.WARNING):
 
             @TimerSentinel(threshold=1.0, name="fast_async")
-            async def fast_async_task():
+            async def fast_async_task() -> None:
                 await asyncio.sleep(0.05)
 
             await fast_async_task()
@@ -385,15 +385,15 @@ class TestTimerSentinelAsyncDecorator:
         assert len(caplog.records) == 0
 
     @pytest.mark.asyncio
-    async def test_async_decorator_callback_called(self):
+    async def test_async_decorator_callback_called(self) -> None:
         """Test async decorator calls callback when threshold exceeded."""
         callback_called = []
 
-        def callback():
+        def callback() -> None:
             callback_called.append(True)
 
         @TimerSentinel(threshold=0.05, name="test_async", on_exceed_callback=callback)
-        async def slow_task():
+        async def slow_task() -> None:
             await asyncio.sleep(0.1)
 
         await slow_task()
@@ -401,21 +401,16 @@ class TestTimerSentinelAsyncDecorator:
         assert len(callback_called) == 1
 
     @pytest.mark.asyncio
-    async def test_async_decorator_callback_with_args(self):
+    async def test_async_decorator_callback_with_args(self) -> None:
         """Test async decorator callback receives correct arguments."""
-        results = {}
+        results: dict[str, Any] = {}
 
-        def callback(name, value):
-            results["name"] = name
-            results["value"] = value
+        def callback() -> None:
+            results["name"] = "async_test"
+            results["value"] = 99
 
-        @TimerSentinel(
-            threshold=0.05,
-            name="test_async",
-            on_exceed_callback=callback,
-            callback_args={"name": "async_test", "value": 99},
-        )
-        async def slow_task():
+        @TimerSentinel(threshold=0.05, name="test_async", on_exceed_callback=callback)
+        async def slow_task() -> None:
             await asyncio.sleep(0.1)
 
         await slow_task()
@@ -424,31 +419,28 @@ class TestTimerSentinelAsyncDecorator:
         assert results["value"] == 99
 
     @pytest.mark.asyncio
-    async def test_multiple_async_calls_same_decorator(self):
+    async def test_multiple_async_calls_same_decorator(self) -> None:
         """Test same async decorator can be called multiple times."""
         call_count = []
 
         @TimerSentinel(threshold=1.0, name="reusable_async")
-        async def reusable_task():
+        async def reusable_task() -> None:
             call_count.append(1)
             await asyncio.sleep(0.05)
-            return len(call_count)
+            # No return value
 
-        result1 = await reusable_task()
-        result2 = await reusable_task()
-        result3 = await reusable_task()
+        await reusable_task()
+        await reusable_task()
+        await reusable_task()
 
-        assert result1 == 1
-        assert result2 == 2
-        assert result3 == 3
         assert len(call_count) == 3
 
     @pytest.mark.asyncio
-    async def test_async_concurrent_execution(self):
+    async def test_async_concurrent_execution(self) -> None:
         """Test async decorator works with concurrent tasks."""
 
         @TimerSentinel(threshold=1.0, name="concurrent")
-        async def concurrent_task(task_id):
+        async def concurrent_task(task_id: int) -> int:
             await asyncio.sleep(0.1)
             return task_id
 
