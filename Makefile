@@ -12,7 +12,7 @@ type-check:
 	poetry run mypy ./src ./tests --strict
 
 lint:
-	ruff check src/ tests/ --fix
+	poetry run ruff check src/ tests/ --fix
 
 test:
 	pytest
