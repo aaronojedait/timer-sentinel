@@ -83,10 +83,14 @@ TimerSentinel(
     logger: Logger | None = None,  # Custom logger
     on_exceed_keyword: str = "OVERTIME",     # Log keyword
     on_exceed_level: int = WARNING,          # Log level
-    on_exceed_callback: Callable = None,     # Callback function
+    on_exceed_callback: Callable = None,     # Callback function (sync or async)
     callback_args: dict = None,              # Args for callback
 )
 ```
+
+**Callback:**
+
+- The `on_exceed_callback` can be a synchronous or asynchronous function. If you provide an async function, it will be awaited automatically.
 
 **Methods:**
 - `start()` - Start timing
