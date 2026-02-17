@@ -21,6 +21,9 @@ packages = [
     { include = "timer_sentinel", from = "src" }
 ]
 
+[tool.poetry.package.include]
+file = "src/timer_sentinel/py.typed"
+
 [tool.poetry.dependencies]
 python = ">=3.10,<3.15"
 
