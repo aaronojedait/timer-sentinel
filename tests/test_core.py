@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import time
+from typing import Any
 
 import pytest
 
@@ -457,3 +458,124 @@ class TestTimerSentinelAsyncDecorator:
         results = await asyncio.gather(*tasks)
 
         assert results == [0, 1, 2, 3, 4]
+
+
+class TestTimerSentinelAsyncCallback:
+    """Test async callback detection and execution strategies."""
+
+    @pytest.mark.asyncio
+    async def test_async_callback_runs_in_event_loop(self) -> None:
+        """Ensure async callback runs correctly within an existing event loop."""
+        # Use an Event to synchronize the test with the background task
+        # avoiding flaky sleeps.
+        event = asyncio.Event()
+        called: dict[str, Any] = {}
+
+        async def async_callback(name: str) -> None:
+            # Simulate some async work
+            await asyncio.sleep(0.01)
+            called["name"] = name
+            # Signal that the callback has finished
+            event.set()
+
+        timer = TimerSentinel(
+            threshold=0.01,
+            name="async_cb",
+            on_exceed_callback=async_callback,
+            callback_args={"name": "in_loop"},
+        )
+
+        timer.start()
+        # Sleep enough to exceed the threshold
+        await asyncio.sleep(0.02)
+        timer.end()
+
+        # report() triggers the task in the background (fire-and-forget style)
+        timer.report()
+
+        # Wait for the callback to complete with a timeout to prevent hanging
+        try:
+            await asyncio.wait_for(event.wait(), timeout=1.0)
+        except asyncio.TimeoutError:
+            pytest.fail("Async callback did not execute within the timeout period")
+
+        assert called["name"] == "in_loop"
+
+    def test_async_callback_runs_outside_event_loop(self) -> None:
+        """Ensure async callback runs via asyncio.run when no event loop exists."""
+        called: dict[str, Any] = {}
+
+        async def async_callback(name: str) -> None:
+            called["name"] = name
+
+        timer = TimerSentinel(
+            threshold=0.01,
+            name="async_cb",
+            on_exceed_callback=async_callback,
+            callback_args={"name": "no_loop"},
+        )
+
+        timer.start()
+        # Using sync sleep here as there is no loop
+        time.sleep(0.02)
+        timer.end()
+
+        # report() calls asyncio.run(), which is blocking
+        timer.report()
+
+        # Callback should have completed before report() returns
+        assert called["name"] == "no_loop"
+
+    def test_sync_callback_always_runs(self) -> None:
+        """Ensure synchronous callback executes correctly in a blocking manner."""
+        called: dict[str, Any] = {}
+
+        def sync_callback(name: str) -> None:
+            called["name"] = name
+
+        timer = TimerSentinel(
+            threshold=0.01,
+            name="sync_cb",
+            on_exceed_callback=sync_callback,
+            callback_args={"name": "sync"},
+        )
+
+        timer.start()
+        time.sleep(0.02)
+        timer.end()
+        timer.report()
+
+        assert called["name"] == "sync"
+
+    @pytest.mark.asyncio
+    async def test_sync_callback_in_event_loop(self) -> None:
+        """Ensure synchronous callback runs blocking even when inside an event loop."""
+        called: dict[str, Any] = {}
+
+        def sync_callback(name: str) -> None:
+            called["name"] = name
+
+        timer = TimerSentinel(
+            threshold=0.01,
+            name="sync_cb",
+            on_exceed_callback=sync_callback,
+            callback_args={"name": "sync_in_loop"},
+        )
+
+        timer.start()
+        await asyncio.sleep(0.02)
+        timer.end()
+
+        # Even inside an async test, a sync callback runs immediately
+        timer.report()
+
+        assert called["name"] == "sync_in_loop"
+
+    def test_no_callback_no_error(self) -> None:
+        """Ensure no errors occur if callback is not provided."""
+        timer = TimerSentinel(threshold=0.01, name="no_cb")
+        timer.start()
+        time.sleep(0.02)
+        timer.end()
+        # Should complete without raising any exceptions
+        timer.report()
