@@ -1,10 +1,20 @@
 # Timer Sentinel
 
-[![PyPI version](https://badge.fury.io/py/timer-sentinel.svg)](https://badge.fury.io/py/timer-sentinel)
+[![PyPI version](https://img.shields.io/pypi/v/timer-sentinel.svg?color=blue)](https://pypi.org/project/timer-sentinel/)
 [![Python Support](https://img.shields.io/pypi/pyversions/timer-sentinel.svg)](https://pypi.org/project/timer-sentinel/)
+[![CI Status](https://img.shields.io/github/actions/workflow/status/aaronojedait/timer-sentinel/ci.yml?branch=main&label=tests)](https://github.com/aaronojedait/timer-sentinel/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](#)
+[![MyPy Checked](https://img.shields.io/badge/mypy-checked-blue.svg)](https://mypy.readthedocs.io/)
+[![Linting: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A dead-simple, **fast**, and **lightweight** Python timer for catching slow code. Zero dependencies, optimized performance, just pure Python doing one thing well.
+
+### Branch Status
+- **Main (Stable):** ![Main](https://img.shields.io/github/actions/workflow/status/aaronojedait/timer-sentinel/ci.yml?branch=main)
+- **Develop (Dev):** ![Develop](https://img.shields.io/github/actions/workflow/status/aaronojedait/timer-sentinel/ci.yml?branch=develop)
+
+---
 
 ## Why?
 
