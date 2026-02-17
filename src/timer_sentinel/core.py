@@ -1,3 +1,4 @@
+import asyncio
 import inspect
 import logging
 import time
@@ -21,6 +22,10 @@ class TimerSentinel:
     Can be used as a context manager, decorator, or called manually.
     Supports both sync and async functions.
 
+    The `on_exceed_callback` can be either a synchronous or
+    asynchronous function. If an async function is provided,
+    it will be awaited automatically.
+
     Examples:
         # As context manager
         with TimerSentinel(threshold=1.0, name="task"):
@@ -35,6 +40,16 @@ class TimerSentinel:
         @TimerSentinel(threshold=1.0, name="task")
         async def do_work():
             await async_task()
+
+        # With sync callback
+        def my_callback():
+            print("Threshold exceeded!")
+        TimerSentinel(threshold=1.0, on_exceed_callback=my_callback)
+
+        # With async callback
+        async def my_async_callback():
+            await notify_async()
+        TimerSentinel(threshold=1.0, on_exceed_callback=my_async_callback)
 
         # Manual usage
         timer = TimerSentinel(threshold=1.0, name="task")
@@ -51,6 +66,7 @@ class TimerSentinel:
         "_on_exceed_keyword",
         "_on_exceed_level",
         "_on_exceed_callback",
+        "_async_callback",
         "_callback_args",
         "_execution_id",
         "_timer",
@@ -182,6 +198,28 @@ class TimerSentinel:
         self.end()
         self.report()
 
+    def _run_callback(self) -> None:
+        """Execute the on_exceed callback, awaiting if it's async."""
+        if not self._on_exceed_callback:
+            return
+
+        if inspect.iscoroutinefunction(self._on_exceed_callback):
+            coro = self._on_exceed_callback(**self._callback_args)
+            loop = self._get_running_loop()
+            if loop is None:
+                asyncio.run(coro)
+            else:
+                loop.create_task(coro)
+        else:
+            self._on_exceed_callback(**self._callback_args)
+
+    def _get_running_loop(self) -> asyncio.AbstractEventLoop | None:
+        """Return the running event loop if present, otherwise None."""
+        try:
+            return asyncio.get_running_loop()
+        except RuntimeError:
+            return None
+
     def start(self) -> None:
         """Start the timer.
 
@@ -222,4 +260,4 @@ class TimerSentinel:
             self._logger.log(self._on_exceed_level, msg)
 
             if self._on_exceed_callback:
-                self._on_exceed_callback(**self._callback_args)
+                self._run_callback()
